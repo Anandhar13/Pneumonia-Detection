@@ -1,9 +1,17 @@
-
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow import keras
 from keras.models import Sequential
-from keras.layers import Dense, Conv2D, MaxPooling2D, Dropout, BatchNormalization, Flatten, MaxPool2D
-from tensorflow.keras.optimizers import Adam
+from keras.layers import Dense , Conv2D , MaxPooling2D , Dropout , BatchNormalization , Flatten , MaxPool2D
+from keras.src.legacy.preprocessing.image import ImageDataGenerator
+import os
+import cv2
+from keras.optimizers import Adam #adam optimizers
+import scipy
 
-class PneumoniaDetection:
+class PneumoniaDetectionModel:
 
     def __init__(self,input_shape=(256,256,3),learning_rate=0.001):
         """
@@ -16,68 +24,73 @@ class PneumoniaDetection:
         self.input_shape=input_shape
         self.learning_rate=learning_rate
 
-        self.model = self.build_model() #build the CNN model
+        self.model = self._build_model() #build the CNN model
 
-    def build_model(self):
-
+    def _build_model(self):
+        model = Sequential()
         """
         Bulid and complie the CNN mode
         :returns the complied sequential model
         """
 
-        model = Sequential() # Initialize Sequential model
+        # First convolutional layer
+        # Adds 32 filters of size 3x3 with ReLU activation
+        # Input layer expects images of shape 256x256x3
+        model.add(Conv2D(32, (3, 3), strides=(1, 1), padding='same', activation='relu', input_shape=self.input_shape))
+        model.add(BatchNormalization())  # Normalize activations to speed up training
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same'))  # Reduce spatial dimensions
 
-        #First Convluation 2D layer with 32 filters to extract features
-        model.add(Conv2D(32,(3,3),strides = 1, padding = 'same', activation = 'relu', input_shape=self.input_shape))
-        model.add(BatchNormalization()) #Normalize activations
-        model.add(MaxPool2D(2,2),strides=2,padding = 'same') #Downsampling with max pooling
-
-
-        # Second Conv2D layer: Increase feature maps to 64
-        model.add(Conv2D(64,(3,3),strides = 1, padding = 'same', activation = 'relu'))
+        # Second convolutional layer
+        model.add(Conv2D(64, (3, 3), strides=(1, 1), padding='same', activation='relu'))
         model.add(BatchNormalization())
-        model.add(Dropout(0.1)) #deactive some percentage of neuron to prevent overfitting
-        model.add(MaxPool2D((2,2),strides=2,padding = 'same'))
+        model.add(Dropout(0.1))  # Prevent overfitting
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same'))
 
-        #Third conv2D layer: Add another 64 filters to learn more features
-        model.add(Conv2D(64,(3,3),strides = 1, padding = 'same', activation = 'relu'))
-        model.add(BatchNormalization())  # Normalize activations
-        model.add(MaxPool2D((2, 2), strides=2, padding='same'))
+        # Third convolutional layer
+        model.add(Conv2D(64, (3, 3), strides=(1, 1), padding='same', activation='relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same'))
 
-        #Fourth COnv2D layer Increase feature maps to 128
-        model.add(Conv2D(128,(3,3),strides = 1, padding = 'same', activation = 'relu'))
+        # Fourth convolutional layer
+        model.add(Conv2D(128, (3, 3), strides=(1, 1), padding='same', activation='relu'))
+        model.add(BatchNormalization())
+        model.add(Dropout(0.2))  # Increased dropout to reduce overfitting
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same'))
+
+        # Fifth convolutional layer
+        model.add(Conv2D(256, (3, 3), strides=(1, 1), padding='same', activation='relu'))
         model.add(BatchNormalization())
         model.add(Dropout(0.2))
-        model.add(MaxPool2D((2, 2), strides=2, padding = 'same'))
+        model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same'))
 
-        #Fifth Conv2D layer: increase feature maps to 256
-        model.add(Conv2D(256,(3,3),strides = 1, padding = 'same', activation = 'relu'))
-        model.add(BatchNormalization())
-        model.add(Dropout(0.2))
-        model.add(MaxPool2D((2, 2), strides=2, padding = 'same'))
+        # Flatten layer
+        # Flattens the output from the convolutional layers into a 1D vector
+        model.add(Flatten())
 
-        model.add(Flatten())  # flatten the model
+        # Fully connected (dense) layers
+        model.add(Dense(units=128, activation='relu'))  # Dense layer with 128 neurons
+        model.add(Dropout(0.2))  # Dropout for regularization
+        model.add(Dense(units=1, activation='sigmoid'))  # Output layer for binary classification
 
-        model.add(Dense(units=128, activation='relu'))  # Fully connected layer
-        model.add(Dropout(0.2))  # To prevent further overfitting
-
-        # Final output layer
-        model.add(Dense(units=1, activation='sigmoid'))  # single neuron with sigmoid function for binary classification
-
-        # compile the model
-        model.compile(optimizer=Adam(lr=self.learning_rate), loss='binary_crossentropy', metrics=['accuracy'])
-        #adam optimizer,binary crossentropy loss,  accuracy metrics
-
+        # Compile the model with Adam optimizer and binary cross-entropy loss
+        model.compile(optimizer=Adam(learning_rate=self.learning_rate),
+                      loss='binary_crossentropy',  # Suitable for binary classification
+                      metrics=['accuracy'])  # Track accuracy during training
         return model
 
-    def summarize(self):
-
-        #Print the summary of the model
-        self.model.summary()
-
-    def train(self, train_generator, validation_generator, epochs=10):
-        #Train the model with the given data generators.
-        history = self.model.fit(train_generator,
-                                    validation_data=validation_generator,
-                                    epochs=epochs)
+    def train(self, train_generator, val_generator, steps_per_epoch, validation_steps, epochs=50):
+        # trains history object containing loss and accuracy metrics
+        history = self.model.fit(
+            train_generator,
+            steps_per_epoch=steps_per_epoch,
+            epochs=epochs,
+            validation_data=val_generator,
+            validation_steps=validation_steps
+        )
         return history
+
+    def evaluate(self, generator, steps): #evaluate the mode on the provided data generators
+        return self.model.evaluate(generator, steps=steps)
+
+    def save_model(self, path): #save the trained model
+        self.model.save(path)
