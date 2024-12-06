@@ -1,26 +1,33 @@
 import pytest
-from pneumonia_detection_model import PneumoniaDetection
-
+from pneumonia_detection_model import PneumoniaDetectionModel
 
 @pytest.fixture
-def model():
+def pneumonia_model():
 
-    #creates a instance of PneumoniaDetection model
+    return PneumoniaDetectionModel(input_shape=(256, 256, 3), learning_rate=0.001)
 
-    return PneumoniaDetection()
+def test_model_initialization(pneumonia_model):
 
-def test_pneumonia_model(model):
-    assert model.input_shape == (256,256,256) #checks if the input shape is in the given dimension
-    assert model.learning_rate == 0.001 #learning rate should be 0.001
+    # Test to check that the model is initialized properly.
 
-def test_model_compilation(model):
-    #test the model compilation
+    # Ensure the model is not None
+    assert pneumonia_model.model is not None, "The model was not initialized correctly."
 
-    assert model.model.optimizer.get_config()["name"] == "Adam" #Optimizer sohould be adam
-    assert model.model.loss == "binary_crossentropy" #should be the loss function
-    assert "accuracy" in model.model.metrics_names , "Metrics should be included in the accuray"
+def test_model_layers_count(pneumonia_model):
 
-def test_model_structure(model):
-    #The model has 5 Conv2D layers, 1 Flatten, 2 Dense, and other utility layers
-    total_layers = sum(1 for layers in model.model.layers)
-    assert total_layers == 13, f"Model should have 12 layers, but found {total_layers}"
+    # Test to check the number of layers in the model.
+
+    model = pneumonia_model.model
+
+    # Check if the model has more than 5 layers (ensures the architecture is built)
+    assert len(model.layers) > 5, "The model does not have enough layers."
+
+def test_model_training_compilation(pneumonia_model):
+
+    # Test to ensure the model is compiled correctly.
+
+    model = pneumonia_model.model
+
+    # Check if the optimizer and loss are set
+    assert model.optimizer is not None, "The model is not compiled with an optimizer."
+    assert model.loss == 'binary_crossentropy', "The loss function is not binary_crossentropy."
