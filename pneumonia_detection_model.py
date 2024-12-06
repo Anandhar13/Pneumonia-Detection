@@ -1,7 +1,7 @@
-from tensorflow.keras.optimizers import Adam # import adam optimizer
-from keras.models import Sequential #Import Sequential model API
-from keras.layers import (Dense,Conv2D,MaxPooling2D, Dropout,BatchNormalization,Flatten,MaxPool2D) #IMporting required layers for CNN
 
+from keras.models import Sequential
+from keras.layers import Dense, Conv2D, MaxPooling2D, Dropout, BatchNormalization, Flatten, MaxPool2D
+from tensorflow.keras.optimizers import Adam
 
 class PneumoniaDetection:
 
