@@ -45,7 +45,7 @@ class PneumoniaDetector:
             x = x / 255  # Normalize the image
             x = np.expand_dims(x, axis=0)  # Expand dimensions to match model input
 
-            # Predict the class using the model
+            # Predict the class using the model.
             classes = self.model.predict(x)
             result1 = classes[0][0]  # Get the first class probability
             result2 = 'Negative'  # Default classification
