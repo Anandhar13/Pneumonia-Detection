@@ -9,7 +9,7 @@ import os
 class PneumoniaDetector:
     def __init__(self, model_path):
 
-        # Initialize the PneumoniaDetector class.
+        # Initialize the PneumoniaDetector Class.
 
 
         self.app = Flask(__name__)  # Create a Flask app instance
