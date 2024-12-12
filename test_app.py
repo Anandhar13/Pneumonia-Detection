@@ -11,7 +11,7 @@ def client():
     return client
 
 def test_home_page(client):
-    # Test that the home page loads successfully.
+    # Test that the Home Page loads successfully.
     response = client.get('/')  # Send a GET request to the home page
     assert response.status_code == 200  # The home page should load successfully
     assert b'<form' in response.data  # Check for a form element in the HTML
