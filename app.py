@@ -17,7 +17,7 @@ class PneumoniaDetector:
         self.setup_routes()  # Set up the Flask routes
 
     def setup_routes(self):
-        # Define the routes for the Flask application.
+        # Define the routes for the Flask Application.
 
         @self.app.route('/', methods=['GET'])
         def home():
