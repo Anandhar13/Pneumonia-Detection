@@ -3,7 +3,7 @@ from app import PneumoniaDetector
 
 @pytest.fixture
 def client():
-    # Set up a test client for the Flask app.
+    # Set up a test client for the Flask App.
     model_path = 'models/pnemonia_model.h5'
     app_instance = PneumoniaDetector(model_path)
     app_instance.app.config['TESTING'] = True  # Enable Flask test mode
