@@ -17,7 +17,7 @@ def test_home_page(client):
     assert b'<form' in response.data  # Check for a form element in the HTML
 
 def test_predict_route_without_image(client):
-    # Test that the predict route handles a POST request without an image.
+    # Test that the predict route handles a POST request without an Image.
     response = client.post('/', data={})  # Send a POST request without data
     assert response.status_code == 400  # Expecting a 400 Bad Request or appropriate error handling
     # Optionally, check for an error message in the response
